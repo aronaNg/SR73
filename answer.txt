@@ -1,0 +1,85 @@
+------------------------------
+1.1 Initialisation du système
+-----------------------------
+
+1. Explication de SS512
+SS512 fait référence à une courbe elliptique supersingulière avec un corps de base de 512 bits. Plus précisément :
+
+SS = "Supersingular" (supersingulière)
+512 = taille du corps de base en bits
+Cette courbe permet de construire des appariements bilinéaires efficaces, qui sont essentiels pour le CP-ABE
+Elle offre un niveau de sécurité équivalent à environ 1024 bits en RSA
+
+2. Définition de mpk et msk
+
+mpk (Master Public Key) : Clé publique maître
+
+Utilisée pour le chiffrement des données
+Partagée publiquement avec tous les utilisateurs
+Permet de chiffrer avec une politique d'accès spécifique
+
+
+msk (Master Secret Key) : Clé secrète maître
+
+Gardée secrète par l'autorité de confiance
+Utilisée pour générer les clés privées des utilisateurs
+Permet de dériver des clés basées sur les attributs
+
+
+
+Différence principale : mpk est publique (chiffrement), msk est privée (génération de clés utilisateurs).
+
+3. Courbes elliptiques supersingulières et leur rôle
+Une courbe elliptique supersingulière a ces propriétés particulières :
+
+Trace nulle : la trace de l'endomorphisme de Frobenius est 0
+Appariements efficaces : permettent de construire des fonctions d'appariement bilinéaires
+Sécurité cryptographique : résistantes au problème du logarithme discret elliptique
+
+Rôle dans CP-ABE :
+
+Les appariements bilinéaires permettent de "multiplier" des éléments chiffrés
+Essentiels pour évaluer les politiques d'accès (portes ET/OU)
+Permettent le déchiffrement conditionnel basé sur les attributs
+
+
+----------------------------------------------------------------
+1.2 Définition de la politique d’accès et chiffrement du message
+-----------------------------------------------------------------
+1 Formule Mathématique associée à l’opération de chiffrement en utilisant mpk 
+
+
+2 Utilisateurs AUTORISÉS :
+
+Utilisateurs possédant ONE ET TWO simultanément
+Utilisateurs possédant THREE
+En guise d'exemple on a
+    Attributs ["ONE", "TWO"] → AUTORISÉ
+    Attributs ["THREE"] → AUTORISÉ
+    Attributs ["ONE"] → REFUSÉ (manque TWO)
+    Attributs ["TWO"] → REFUSÉ (manque ONE)
+    Attributs ["FOUR"] → REFUSÉ (aucune condition satisfaite)
+
+------------------------------------
+1.3 Génération des clés utilisateurs
+------------------------------------
+
+1 Formule mathématique utilisée pour générer les clés des utilisateurs à partir de mpk et msk
+ Voir doc https://ieeexplore.ieee.org/document/4223236 Encrypt(PK, M,T)
+
+2 Politique rappel : (ONE and TWO) or THREE
+Analyse des clés générées :
+
+User1 avec attributes_user1 = ['ONE', 'TWO']
+
+sk1 contient les composants pour ONE et TWO
+  AUTORISÉ : satisfait la condition (ONE and TWO)
+
+
+User2 avec attributes_user2 = ['ONE']
+
+sk2 contient uniquement le composant pour ONE
+  REFUSÉ : ne satisfait ni (ONE and TWO) ni THREE
+  Manque l'attribut TWO pour compléter la première branche
+
+Conclusion : Seul User1 peut déchiffrer le message car ses attributs satisfont la politique d'accès définie.
